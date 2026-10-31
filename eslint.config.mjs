@@ -12,6 +12,7 @@ export default [
     ignores: [
       ".next/**",
       "out/**",
+      ".wrangler/**",
       "build/**",
       "next-env.d.ts",
       "scripts",
