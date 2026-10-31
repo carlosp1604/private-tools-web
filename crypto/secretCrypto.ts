@@ -1,5 +1,5 @@
-import { argon2id } from 'hash-wasm'
 import { Bytes, decodeBase64Url, encodeBase64Url } from '~/crypto/base64Url'
+import { concatBytes, hkdf, stretchPassword } from '~/crypto/keyDerivation'
 
 const KEY_BYTES = 32
 const SALT_BYTES = 16
@@ -8,10 +8,6 @@ const GCM_TAG_BYTES = 16
 
 export const MAX_CIPHERTEXT_BYTES = 64 * 1024
 export const MAX_SECRET_TEXT_BYTES = MAX_CIPHERTEXT_BYTES - GCM_TAG_BYTES
-
-const ARGON2_ITERATIONS = 2
-const ARGON2_MEMORY_KIB = 19_456
-const ARGON2_PARALLELISM = 1
 
 const SALT_INFO = 'private-tools/secret/v1/salt'
 const ENCRYPTION_INFO = 'private-tools/secret/v1/encryption'
@@ -38,27 +34,6 @@ function randomBytes(length: number): Bytes {
   return crypto.getRandomValues(new Uint8Array(length))
 }
 
-function concatBytes(first: Bytes, second: Bytes): Bytes {
-  const bytes = new Uint8Array(first.length + second.length)
-
-  bytes.set(first)
-  bytes.set(second, first.length)
-
-  return bytes
-}
-
-async function hkdf(inputKey: Bytes, info: string, length: number): Promise<Bytes> {
-  const key = await crypto.subtle.importKey('raw', inputKey, 'HKDF', false, ['deriveBits'])
-
-  const bits = await crypto.subtle.deriveBits(
-    { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: new TextEncoder().encode(info) },
-    key,
-    length * 8
-  )
-
-  return new Uint8Array(bits)
-}
-
 /**
  * The salt comes from the link key instead of the server, because the reader needs it before the server releases
  * anything. It is still unique per secret, since each one has its own random link key
@@ -66,17 +41,7 @@ async function hkdf(inputKey: Bytes, info: string, length: number): Promise<Byte
 export async function deriveSecretKeys(linkKey: Bytes, password: string): Promise<SecretKeys> {
   const salt = await hkdf(linkKey, SALT_INFO, SALT_BYTES)
 
-  const stretchedPassword = await argon2id({
-    password: password.normalize('NFKC'),
-    salt,
-    iterations: ARGON2_ITERATIONS,
-    memorySize: ARGON2_MEMORY_KIB,
-    parallelism: ARGON2_PARALLELISM,
-    hashLength: KEY_BYTES,
-    outputType: 'binary',
-  })
-
-  const inputKey = concatBytes(linkKey, new Uint8Array(stretchedPassword))
+  const inputKey = concatBytes(linkKey, await stretchPassword(password, salt))
 
   const encryptionKeyBytes = await hkdf(inputKey, ENCRYPTION_INFO, KEY_BYTES)
   const authKey = await hkdf(inputKey, AUTH_INFO, KEY_BYTES)
