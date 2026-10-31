@@ -20,6 +20,7 @@ export interface BrowserPeerEvents {
   onChunk(chunk: Bytes): void
   onUnreachable(): void
   onRestored(): void
+  onChannelClosed(): void
 }
 
 /**
@@ -148,6 +149,7 @@ export class BrowserPeer implements PeerPort, FileChannel {
     channel.bufferedAmountLowThreshold = BUFFER_LOW_BYTES
 
     channel.addEventListener('open', () => this.events.onControlOpen())
+    channel.addEventListener('close', () => this.events.onChannelClosed())
     channel.addEventListener('message', (event: MessageEvent<string | ArrayBuffer>) => {
       if (typeof event.data === 'string') {
         this.events.onControlMessage(event.data)

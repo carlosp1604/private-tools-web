@@ -14,6 +14,10 @@ function hasSavePicker(target: unknown): target is SaveFilePickerWindow {
   return typeof target === 'object' && target !== null && 'showSaveFilePicker' in target
 }
 
+function isTouchDevice(): boolean {
+  return navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches
+}
+
 function download(file: Blob, name: string): void {
   const url = URL.createObjectURL(file)
   const link = document.createElement('a')
@@ -96,11 +100,12 @@ async function createPrivateStorageSink(name: string, size: number): Promise<Fil
 
 /**
  * Writes to disk as data arrives, so large files never live in memory. Must be called from a user gesture, because
- * the save dialog requires it. The private storage of the browser covers those without that dialog, at the cost of a
+ * the save dialog requires it. Phones skip that dialog on purpose, because it sends the page to the background in the
+ * middle of a session. The private storage of the browser covers them and those without the dialog, at the cost of a
  * temporary second copy, and memory is the last resort for small files
  */
 export async function createFileSink(name: string, size: number): Promise<FileSink> {
-  if (hasSavePicker(window)) {
+  if (hasSavePicker(window) && !isTouchDevice()) {
     const handle = await window.showSaveFilePicker({ suggestedName: name })
 
     return new WritableFileSink(await handle.createWritable())

@@ -15,6 +15,7 @@ interface RoomNotice {
 }
 
 const CONNECTION_TIMEOUT_MS = 10_000
+const ESTIMATE_INTERVAL_MS = 1_000
 const RECONNECT_DELAY_MS = 2_000
 
 export interface TransferProgress {
@@ -32,6 +33,7 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
   const socketRef = useRef<WebSocket | null>(null)
   const exchangeRef = useRef<FileExchange | null>(null)
   const speedRef = useRef<SpeedSample | null>(null)
+  const transferredBytesRef = useRef(0)
   const exchangeStatusRef = useRef<FileExchangeStatus>('idle')
   const outgoingFileRef = useRef<File | null>(null)
   const [role, setRole] = useState<TransferRole | null>(null)
@@ -64,6 +66,7 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
 
     release()
     speedRef.current = null
+    transferredBytesRef.current = 0
     exchangeStatusRef.current = 'idle'
     setExchangeStatus('idle')
     setIncomingFile(null)
@@ -78,24 +81,15 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
     setEndReason(completed && reason ? 'completed' : reason)
   }
 
-  const trackProgress = (bytes: number, totalBytes: number) => {
-    const sample = updateSpeed(speedRef.current, bytes, performance.now())
-
-    speedRef.current = sample
-
-    setProgress({
-      bytes,
-      bytesPerSecond: sample.bytesPerSecond,
-      remainingSeconds: estimateRemainingSeconds(totalBytes - bytes, sample.bytesPerSecond),
-    })
+  const trackProgress = (bytes: number) => {
+    transferredBytesRef.current = bytes
+    setProgress((current) => ({ ...current, bytes }))
   }
 
   const start = async (nextRole: TransferRole, roomCode: string, expectedCommitment: string | null): Promise<void> => {
     const identity = await createBrowserIdentity()
     const nonce = generateNonce()
     const signal = (message: SignalMessage) => socketRef.current?.send(new TextEncoder().encode(JSON.stringify(message)))
-
-    let totalBytes = 0
 
     const peer = new BrowserPeer(nextRole, identity, {
       onCandidate: (candidate) => connection.handleCandidate(candidate),
@@ -104,6 +98,11 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
       onChunk: (chunk) => exchangeRef.current?.handleChunk(chunk),
       onUnreachable: () => connection.handleUnreachable(),
       onRestored: () => connection.handleRestored(),
+      onChannelClosed: () => {
+        if (connectionRef.current === connection) {
+          finish('room_closed')
+        }
+      },
     })
 
     const connection: TransferConnection = new TransferConnection(
@@ -115,6 +114,7 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
       {
         onStatus: (nextStatus) => (isTransferFailure(nextStatus) ? finish(nextStatus) : setStatus(nextStatus)),
         onVerified: (verifiedNames) => {
+          verified = true
           setNames(verifiedNames)
 
           exchangeRef.current = new FileExchange(nextRole, peer, {
@@ -127,11 +127,8 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
                 finish('failed')
               }
             },
-            onOffer: (file) => {
-              totalBytes = file.size
-              setIncomingFile(file)
-            },
-            onProgress: (bytes) => trackProgress(bytes, totalBytes || (outgoingFileRef.current?.size ?? 0)),
+            onOffer: setIncomingFile,
+            onProgress: trackProgress,
           })
         },
         onMessage: (message) => exchangeRef.current?.handleMessage(message),
@@ -147,6 +144,7 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
     setStatus('waiting')
 
     let peerSeen = false
+    let verified = false
 
     /**
      * Phones drop the socket as soon as the page goes to the background, for instance to pick the file or to share
@@ -178,7 +176,9 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
       socket.addEventListener('close', () => {
         clearTimeout(connectionTimeout)
 
-        if (socketRef.current !== socket) {
+        // Once the direct channel is verified, the room has done its job and that channel tells when the other side leaves.
+        // Phones drop this socket just by opening the file picker, which must not end a healthy connection
+        if (socketRef.current !== socket || verified) {
           return
         }
 
@@ -200,7 +200,7 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
         if (type === 'peer_joined') {
           peerSeen = true
           connection.handlePeerJoined()
-        } else if (type === 'room_closed' || type === 'room_expired') {
+        } else if ((type === 'room_closed' || type === 'room_expired') && !verified) {
           finish(type)
         }
       })
@@ -257,6 +257,32 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
       setFileTooLarge(error instanceof FileTooLargeError)
     }
   }
+
+  const totalBytes = incomingFile?.size ?? outgoingFile?.size ?? 0
+
+  // On a timer instead of on each acknowledgement, so the numbers stay readable and a stall shows up as a falling speed
+  useEffect(() => {
+    if (exchangeStatus !== 'transferring') {
+      return
+    }
+
+    speedRef.current = updateSpeed(null, transferredBytesRef.current, performance.now())
+
+    const interval = setInterval(() => {
+      const bytes = transferredBytesRef.current
+      const sample = updateSpeed(speedRef.current, bytes, performance.now())
+
+      speedRef.current = sample
+
+      setProgress({
+        bytes,
+        bytesPerSecond: sample.bytesPerSecond,
+        remainingSeconds: estimateRemainingSeconds(totalBytes - bytes, sample.bytesPerSecond),
+      })
+    }, ESTIMATE_INTERVAL_MS)
+
+    return () => clearInterval(interval)
+  }, [exchangeStatus, totalBytes])
 
   const transferring = exchangeStatus === 'transferring' || exchangeStatus === 'verifying'
 
