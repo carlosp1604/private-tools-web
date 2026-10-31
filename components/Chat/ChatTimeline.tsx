@@ -19,7 +19,7 @@ export function ChatTimeline({ entries }: Props) {
   return (
     <div role="log" aria-live="polite" className="flex min-h-0 flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto px-3 py-3">
       { entries.map((entry) => (entry.kind === 'message'
-        ? <ChatBubble key={ entry.id } mine={ entry.mine } author={ entry.author } text={ entry.text } sentAt={ entry.sentAt } />
+        ? <ChatBubble key={ entry.id } mine={ entry.mine } text={ entry.text } sentAt={ entry.sentAt } />
         : (
           <p key={ entry.id } className="self-center rounded-full bg-surface px-3 py-1 text-xs text-muted">
             { interpolate(t(entry.event === 'joined' ? 'chat.event.joined' : 'chat.event.left'), { name: entry.name }) }

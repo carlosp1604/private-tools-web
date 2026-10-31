@@ -4,7 +4,7 @@ import { ActiveChatStatus, ChatEntry } from '~/hooks/useChat'
 import { ChatComposer } from '~/components/Chat/ChatComposer'
 import { ChatPresence } from '~/components/Chat/ChatPresence'
 import { ChatTimeline } from '~/components/Chat/ChatTimeline'
-import { ChatInvitation } from '~/components/Chat/ChatInvitation'
+import { ChatRoomCode } from '~/components/Chat/ChatRoomCode'
 import { useTranslation } from '~/context/TranslationContext'
 
 interface Props {
@@ -30,9 +30,11 @@ export function ChatRoom({ status, sessionCode, displayName, peerName, entries, 
 
       <p className="rounded-lg bg-border px-3 py-2 text-xs leading-5 text-foreground">{ t('chat.reloadWarning') }</p>
 
+      <ChatRoomCode sessionCode={ sessionCode } />
+
       <ChatPresence status={ status } displayName={ displayName } peerName={ peerName } />
 
-      { status === 'waiting' && <ChatInvitation sessionCode={ sessionCode } /> }
+      { status === 'waiting' && <p className="text-xs leading-5 text-muted">{ t('chat.invitation') }</p> }
 
       <ChatTimeline entries={ entries } />
 

@@ -53,10 +53,10 @@
   "chat.status.compromised": "No se pudo verificar a la otra persona. La conversación se ha cerrado por seguridad.",
   "chat.status.disconnected": "Conexión perdida.",
   "chat.invitation": "Comparte este código y la contraseña por canales distintos. La otra persona debe usar ambos.",
-  "chat.you": "Tú",
   "chat.youAre": "Tú: {name}",
   "chat.connectedWith": "Conectado con {name}",
   "chat.event.joined": "{name} se unió",
   "chat.event.left": "{name} abandonó el chat",
-  "chat.encrypted": "Cifrado de extremo a extremo: solo tú y la otra persona podéis leer los mensajes. El servidor no los guarda ni puede verlos."
+  "chat.encrypted": "Cifrado de extremo a extremo: solo tú y la otra persona podéis leer los mensajes. El servidor no los guarda ni puede verlos.",
+  "chat.roomCode": "Código de sala"
 }

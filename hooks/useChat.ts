@@ -14,18 +14,17 @@ function isEndReason(status: ChatStatus): status is ChatEndReason {
 }
 
 export type ChatEntry =
-  | { kind: 'message'; id: number; mine: boolean; author: string; text: string; sentAt: Date }
+  | { kind: 'message'; id: number; mine: boolean; text: string; sentAt: Date }
   | { kind: 'event'; id: number; event: 'joined' | 'left'; name: string }
 
 type NewChatEntry =
-  | { kind: 'message'; mine: boolean; author: string; text: string; sentAt: Date }
+  | { kind: 'message'; mine: boolean; text: string; sentAt: Date }
   | { kind: 'event'; event: 'joined' | 'left'; name: string }
 
 export function useChat() {
   const sessionRef = useRef<ChatSession | null>(null)
   const nextEntryIdRef = useRef(0)
   const attemptRef = useRef(0)
-  const peerNameRef = useRef<string | null>(null)
   const [status, setStatus] = useState<ActiveChatStatus | null>(null)
   const [endReason, setEndReason] = useState<ChatEndReason | null>(null)
   const [lastSessionCode, setLastSessionCode] = useState('')
@@ -67,15 +66,13 @@ export function useChat() {
           setStatus(nextStatus)
         }
       },
-      onMessage: (text) => addEntry({ kind: 'message', mine: false, author: peerNameRef.current ?? '', text, sentAt: new Date() }),
+      onMessage: (text) => addEntry({ kind: 'message', mine: false, text, sentAt: new Date() }),
       onUndelivered: () => setUndelivered(true),
       onPeerJoined: (peer) => {
-        peerNameRef.current = peer
         setPeerName(peer)
         addEntry({ kind: 'event', event: 'joined', name: peer })
       },
       onPeerLeft: (peer) => {
-        peerNameRef.current = null
         setPeerName(null)
         addEntry({ kind: 'event', event: 'left', name: peer })
       },
@@ -87,14 +84,13 @@ export function useChat() {
 
     await sessionRef.current?.send(text)
 
-    addEntry({ kind: 'message', mine: true, author: displayName, text, sentAt: new Date() })
+    addEntry({ kind: 'message', mine: true, text, sentAt: new Date() })
   }
 
   const leave = () => {
     attemptRef.current += 1
     sessionRef.current?.leave()
     sessionRef.current = null
-    peerNameRef.current = null
     setStatus(null)
     setSessionCode('')
     setDisplayName('')
