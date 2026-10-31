@@ -92,5 +92,6 @@
   "transfer.exchange.transferring": "Trasferimento…",
   "transfer.exchange.verifying": "Verifica del file…",
   "transfer.exchange.completed": "Completato. Il file è arrivato intatto.",
-  "transfer.exchange.corrupted": "Il file non è arrivato intatto ed è stato scartato. Crea un nuovo invio."
+  "transfer.exchange.corrupted": "Il file non è arrivato intatto ed è stato scartato. Crea un nuovo invio.",
+  "transfer.dropHint": "o trascinalo qui"
 }

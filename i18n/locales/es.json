@@ -92,5 +92,6 @@
   "transfer.exchange.transferring": "Transfiriendo…",
   "transfer.exchange.verifying": "Comprobando el fichero…",
   "transfer.exchange.completed": "Completado. El fichero llegó intacto.",
-  "transfer.exchange.corrupted": "El fichero no llegó intacto y se ha descartado. Crea un envío nuevo."
+  "transfer.exchange.corrupted": "El fichero no llegó intacto y se ha descartado. Crea un envío nuevo.",
+  "transfer.dropHint": "o arrástralo aquí"
 }

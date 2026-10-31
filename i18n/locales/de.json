@@ -92,5 +92,6 @@
   "transfer.exchange.transferring": "Wird übertragen…",
   "transfer.exchange.verifying": "Datei wird geprüft…",
   "transfer.exchange.completed": "Abgeschlossen. Die Datei ist unversehrt angekommen.",
-  "transfer.exchange.corrupted": "Die Datei kam nicht unversehrt an und wurde verworfen. Erstelle eine neue Übertragung."
+  "transfer.exchange.corrupted": "Die Datei kam nicht unversehrt an und wurde verworfen. Erstelle eine neue Übertragung.",
+  "transfer.dropHint": "oder hierher ziehen"
 }

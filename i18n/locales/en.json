@@ -92,5 +92,6 @@
   "transfer.exchange.transferring": "Transferring…",
   "transfer.exchange.verifying": "Checking the file…",
   "transfer.exchange.completed": "Completed. The file arrived intact.",
-  "transfer.exchange.corrupted": "The file did not arrive intact and was discarded. Create a new transfer."
+  "transfer.exchange.corrupted": "The file did not arrive intact and was discarded. Create a new transfer.",
+  "transfer.dropHint": "or drag it here"
 }
