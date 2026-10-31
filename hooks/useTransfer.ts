@@ -15,6 +15,7 @@ interface RoomNotice {
 }
 
 const CONNECTION_TIMEOUT_MS = 10_000
+const RECONNECT_DELAY_MS = 2_000
 
 export interface TransferProgress {
   bytes: number
@@ -92,11 +93,7 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
   const start = async (nextRole: TransferRole, roomCode: string, expectedCommitment: string | null): Promise<void> => {
     const identity = await createBrowserIdentity()
     const nonce = generateNonce()
-    const socket = openTransferSocket(roomCode)
-    const connectionTimeout = setTimeout(() => socket.close(), CONNECTION_TIMEOUT_MS)
-    const signal = (message: SignalMessage) => socket.send(new TextEncoder().encode(JSON.stringify(message)))
-
-    socketRef.current = socket
+    const signal = (message: SignalMessage) => socketRef.current?.send(new TextEncoder().encode(JSON.stringify(message)))
 
     let totalBytes = 0
 
@@ -149,29 +146,67 @@ export function useTransfer(initialCode?: string, expectedCommitment?: string) {
     setEndReason(null)
     setStatus('waiting')
 
-    socket.addEventListener('open', () => clearTimeout(connectionTimeout))
-    socket.addEventListener('close', () => {
-      clearTimeout(connectionTimeout)
+    let peerSeen = false
 
-      if (socketRef.current === socket) {
-        finish('room_closed')
-      }
-    })
-    socket.addEventListener('message', (event: MessageEvent<string | ArrayBuffer>) => {
-      if (typeof event.data !== 'string') {
-        connection.handleSignal(JSON.parse(new TextDecoder().decode(event.data)) as SignalMessage)
+    /**
+     * Phones drop the socket as soon as the page goes to the background, for instance to pick the file or to share
+     * the code. Until the other side arrives that loses nothing, so the same identity simply connects again
+     */
+    const reconnect = async (lostSocket: WebSocket) => {
+      const availability = await checkRoomAvailability(roomCode)
 
+      if (socketRef.current !== lostSocket) {
         return
       }
 
-      const { type } = JSON.parse(event.data) as RoomNotice
-
-      if (type === 'peer_joined') {
-        connection.handlePeerJoined()
-      } else if (type === 'room_closed' || type === 'room_expired') {
-        finish(type)
+      if (availability.success) {
+        connectSocket()
+      } else if (availability.error === 'not_found') {
+        finish('room_expired')
+      } else {
+        setTimeout(() => void reconnect(lostSocket), RECONNECT_DELAY_MS)
       }
-    })
+    }
+
+    const connectSocket = () => {
+      const socket = openTransferSocket(roomCode)
+      const connectionTimeout = setTimeout(() => socket.close(), CONNECTION_TIMEOUT_MS)
+
+      socketRef.current = socket
+
+      socket.addEventListener('open', () => clearTimeout(connectionTimeout))
+      socket.addEventListener('close', () => {
+        clearTimeout(connectionTimeout)
+
+        if (socketRef.current !== socket) {
+          return
+        }
+
+        if (peerSeen) {
+          finish('room_closed')
+        } else {
+          void reconnect(socket)
+        }
+      })
+      socket.addEventListener('message', (event: MessageEvent<string | ArrayBuffer>) => {
+        if (typeof event.data !== 'string') {
+          connection.handleSignal(JSON.parse(new TextDecoder().decode(event.data)) as SignalMessage)
+
+          return
+        }
+
+        const { type } = JSON.parse(event.data) as RoomNotice
+
+        if (type === 'peer_joined') {
+          peerSeen = true
+          connection.handlePeerJoined()
+        } else if (type === 'room_closed' || type === 'room_expired') {
+          finish(type)
+        }
+      })
+    }
+
+    connectSocket()
   }
 
   const send = async () => {
