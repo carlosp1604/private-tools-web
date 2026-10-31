@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Button } from '~/components/ui/Button'
-import { ChatEntry } from '~/hooks/useChat'
-import { ChatStatus } from '~/services/chat/ChatSession'
+import { ActiveChatStatus, ChatEntry } from '~/hooks/useChat'
 import { ChatComposer } from '~/components/Chat/ChatComposer'
 import { ChatPresence } from '~/components/Chat/ChatPresence'
 import { ChatTimeline } from '~/components/Chat/ChatTimeline'
@@ -9,7 +8,7 @@ import { ChatInvitation } from '~/components/Chat/ChatInvitation'
 import { useTranslation } from '~/context/TranslationContext'
 
 interface Props {
-  status: ChatStatus
+  status: ActiveChatStatus
   sessionCode: string
   displayName: string
   peerName: string | null
@@ -29,11 +28,11 @@ export function ChatRoom({ status, sessionCode, displayName, peerName, entries, 
         <Button variant="secondary" onClick={ onLeave }>{ t('chat.leave') }</Button>
       </header>
 
+      <p className="rounded-lg bg-border px-3 py-2 text-xs leading-5 text-foreground">{ t('chat.reloadWarning') }</p>
+
       <ChatPresence status={ status } displayName={ displayName } peerName={ peerName } />
 
       { status === 'waiting' && <ChatInvitation sessionCode={ sessionCode } /> }
-
-      <p className="rounded-lg bg-border px-3 py-2 text-xs leading-5 text-foreground">{ t('chat.reloadWarning') }</p>
 
       <ChatTimeline entries={ entries } />
 
@@ -41,7 +40,7 @@ export function ChatRoom({ status, sessionCode, displayName, peerName, entries, 
 
       <ChatComposer disabled={ status !== 'ready' || peerName === null } onSend={ onSend } />
 
-      <p className="rounded-lg bg-surface px-3 py-1.5 text-center text-xs text-muted">{ t('chat.encrypted') }</p>
+      <p className="text-center text-xs leading-5 text-muted">{ t('chat.encrypted') }</p>
     </main>
   )
 }

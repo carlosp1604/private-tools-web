@@ -54,9 +54,9 @@
   "chat.status.disconnected": "Connexion perdue.",
   "chat.invitation": "Partagez ce code et le mot de passe par des canaux différents. L'autre personne a besoin des deux.",
   "chat.you": "Vous",
-  "chat.youAre": "Vous êtes {name}",
+  "chat.youAre": "Vous : {name}",
   "chat.connectedWith": "Connecté à {name}",
   "chat.event.joined": "{name} a rejoint",
   "chat.event.left": "{name} a quitté la discussion",
-  "chat.encrypted": "Chiffré de bout en bout"
+  "chat.encrypted": "Chiffré de bout en bout : seuls vous et l'autre personne pouvez lire ces messages. Le serveur ne les stocke pas et ne peut pas les voir."
 }

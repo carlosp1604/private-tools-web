@@ -4,6 +4,15 @@ import { openRoomConnection } from '~/services/chat/openRoomConnection'
 import { generateDisplayName } from '~/services/chat/generateDisplayName'
 import { ChatSession, ChatStatus } from '~/services/chat/ChatSession'
 
+const ENDED_STATUSES = ['room_full', 'compromised', 'disconnected'] as const
+
+export type ChatEndReason = (typeof ENDED_STATUSES)[number]
+export type ActiveChatStatus = Exclude<ChatStatus, ChatEndReason>
+
+function isEndReason(status: ChatStatus): status is ChatEndReason {
+  return ENDED_STATUSES.some((reason) => reason === status)
+}
+
 export type ChatEntry =
   | { kind: 'message'; id: number; mine: boolean; author: string; text: string; sentAt: Date }
   | { kind: 'event'; id: number; event: 'joined' | 'left'; name: string }
@@ -17,7 +26,9 @@ export function useChat() {
   const nextEntryIdRef = useRef(0)
   const attemptRef = useRef(0)
   const peerNameRef = useRef<string | null>(null)
-  const [status, setStatus] = useState<ChatStatus | null>(null)
+  const [status, setStatus] = useState<ActiveChatStatus | null>(null)
+  const [endReason, setEndReason] = useState<ChatEndReason | null>(null)
+  const [lastSessionCode, setLastSessionCode] = useState('')
   const [sessionCode, setSessionCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [peerName, setPeerName] = useState<string | null>(null)
@@ -36,7 +47,9 @@ export function useChat() {
     const name = generateDisplayName()
 
     setSessionCode(code)
+    setLastSessionCode(code)
     setDisplayName(name)
+    setEndReason(null)
     setStatus('connecting')
 
     const { roomId, authKey } = await deriveRoomKeys(code, password)
@@ -46,7 +59,14 @@ export function useChat() {
     }
 
     sessionRef.current = openRoomConnection(roomId, authKey, name, {
-      onStatus: setStatus,
+      onStatus: (nextStatus) => {
+        if (isEndReason(nextStatus)) {
+          leave()
+          setEndReason(nextStatus)
+        } else {
+          setStatus(nextStatus)
+        }
+      },
       onMessage: (text) => addEntry({ kind: 'message', mine: false, author: peerNameRef.current ?? '', text, sentAt: new Date() }),
       onUndelivered: () => setUndelivered(true),
       onPeerJoined: (peer) => {
@@ -103,5 +123,5 @@ export function useChat() {
     sessionRef.current?.leave()
   }, [])
 
-  return { status, sessionCode, displayName, peerName, entries, undelivered, connect, send, leave }
+  return { status, endReason, lastSessionCode, sessionCode, displayName, peerName, entries, undelivered, connect, send, leave }
 }

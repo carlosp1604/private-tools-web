@@ -1,5 +1,5 @@
 import { interpolate } from '~/helpers/interpolate'
-import { ChatStatus } from '~/services/chat/ChatSession'
+import { ActiveChatStatus } from '~/hooks/useChat'
 import { useTranslation } from '~/context/TranslationContext'
 
 const STATUS_MESSAGES = {
@@ -7,9 +7,6 @@ const STATUS_MESSAGES = {
   waiting: 'chat.status.waiting',
   securing: 'chat.status.securing',
   ready: 'chat.status.securing',
-  room_full: 'chat.status.roomFull',
-  compromised: 'chat.status.compromised',
-  disconnected: 'chat.status.disconnected',
 } as const
 
 interface DotProps {
@@ -21,20 +18,19 @@ function PresenceDot({ online }: DotProps) {
 }
 
 interface Props {
-  status: ChatStatus
+  status: ActiveChatStatus
   displayName: string
   peerName: string | null
 }
 
 export function ChatPresence({ status, displayName, peerName }: Props) {
   const { t } = useTranslation()
-  const selfOnline = status !== 'disconnected' && status !== 'room_full' && status !== 'compromised'
   const peerOnline = status === 'ready' && peerName !== null
 
   return (
     <div role="status" className="flex min-w-0 flex-col gap-1 text-sm">
       <p className="flex items-center gap-2 text-muted">
-        <PresenceDot online={ selfOnline } />
+        <PresenceDot online />
         <span className="truncate">{ interpolate(t('chat.youAre'), { name: displayName }) }</span>
       </p>
       <p className="flex items-center gap-2 text-foreground">

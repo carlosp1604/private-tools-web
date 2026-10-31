@@ -6,12 +6,28 @@ import { useTranslation } from '~/context/TranslationContext'
 
 export function Chat() {
   const { t } = useTranslation()
-  const { status, sessionCode, displayName, peerName, entries, undelivered, connect, send, leave } = useChat()
+  const {
+    status,
+    endReason,
+    lastSessionCode,
+    sessionCode,
+    displayName,
+    peerName,
+    entries,
+    undelivered,
+    connect,
+    send,
+    leave,
+  } = useChat()
 
   if (status === null) {
     return (
       <ToolPage title={ t('landing.chat.title') } description={ t('chat.description') }>
-        <ChatJoinForm onJoin={ (code, password) => void connect(code, password) } />
+        <ChatJoinForm
+          endReason={ endReason }
+          initialSessionCode={ lastSessionCode }
+          onJoin={ (code, password) => void connect(code, password) }
+        />
       </ToolPage>
     )
   }

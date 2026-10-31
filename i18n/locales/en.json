@@ -54,9 +54,9 @@
   "chat.status.disconnected": "Connection lost.",
   "chat.invitation": "Share this code and the password through different channels. The other person needs both.",
   "chat.you": "You",
-  "chat.youAre": "You are {name}",
+  "chat.youAre": "You: {name}",
   "chat.connectedWith": "Connected with {name}",
   "chat.event.joined": "{name} joined",
   "chat.event.left": "{name} left the chat",
-  "chat.encrypted": "End-to-end encrypted"
+  "chat.encrypted": "End-to-end encrypted: only you and the other person can read these messages. The server neither stores nor can see them."
 }
