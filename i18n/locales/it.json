@@ -78,5 +78,19 @@
   "transfer.end.expired": "Il codice è scaduto. Crea un nuovo invio.",
   "transfer.end.failed": "Impossibile avviare l'invio. Riprova.",
   "transfer.end.unreachable": "Non è stato possibile stabilire una connessione diretta tra le due reti.",
-  "transfer.end.compromised": "Non è stato possibile verificare la connessione. È stata chiusa per sicurezza."
+  "transfer.end.compromised": "Non è stato possibile verificare la connessione. È stata chiusa per sicurezza.",
+  "transfer.selectFile": "Scegli file",
+  "transfer.confirm": "Invia",
+  "transfer.incoming": "L'altra persona vuole inviarti questo file:",
+  "transfer.accept": "Accetta e salva",
+  "transfer.tooLarge": "Il file è troppo grande per questo browser.",
+  "transfer.progress": "Avanzamento dell'invio",
+  "transfer.remaining": "Restano {time}",
+  "transfer.keepOpen": "Tieni aperta questa pagina e lo schermo acceso fino al termine.",
+  "transfer.end.completed": "Invio completato.",
+  "transfer.exchange.offered": "In attesa che l'altra persona accetti…",
+  "transfer.exchange.transferring": "Trasferimento…",
+  "transfer.exchange.verifying": "Verifica del file…",
+  "transfer.exchange.completed": "Completato. Il file è arrivato intatto.",
+  "transfer.exchange.corrupted": "Il file non è arrivato intatto ed è stato scartato. Crea un nuovo invio."
 }

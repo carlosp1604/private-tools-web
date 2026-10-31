@@ -14,6 +14,8 @@ class Side {
   public readonly statuses: Array<TransferStatus> = []
   public names: { sender: string; receiver: string } | null = null
   public closed = false
+  public restarts = 0
+  public readonly messages: Array<string> = []
   public connection!: TransferConnection
   public other!: Side
 
@@ -29,6 +31,11 @@ class Side {
       acceptOffer: () => Promise.resolve(sdpWith(this.advertisedFingerprint)),
       acceptAnswer: () => Promise.resolve(),
       addCandidate: () => Promise.resolve(),
+      restart: () => {
+        this.restarts += 1
+
+        return Promise.resolve(sdpWith(this.advertisedFingerprint))
+      },
       sendControl: (message) => this.other.connection.handleControlMessage(message),
       close: () => {
         this.closed = true
@@ -40,6 +47,7 @@ class Side {
       onVerified: (names) => {
         this.names = names
       },
+      onMessage: (message) => this.messages.push(message),
     })
   }
 
@@ -149,11 +157,78 @@ describe('TransferConnection', () => {
     await until(() => pair.receiver.status === 'compromised')
   })
 
-  it('should report that a direct connection is not possible', () => {
+  const connectVerified = async (relay?: Relay) => {
+    const pair = connect(relay)
+
+    await openControl(pair)
+    await until(() => pair.sender.names !== null && pair.receiver.names !== null)
+
+    return pair
+  }
+
+  it('should hand over the messages that follow the verification', async () => {
+    const { sender, receiver } = await connectVerified()
+
+    receiver.connection.handleControlMessage('after verification')
+
+    await until(() => receiver.messages.length === 1)
+
+    expect(sender.status).toBe('connected')
+    expect(receiver.messages).toStrictEqual(['after verification'])
+  })
+
+  it('should negotiate a new path when the network fails after verifying', async () => {
+    const { sender, receiver } = await connectVerified()
+
+    sender.connection.handleUnreachable()
+    receiver.connection.handleUnreachable()
+
+    await until(() => sender.restarts === 1)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    expect(sender.status).toBe('connected')
+    expect(receiver.status).toBe('connected')
+
+    sender.connection.handleRestored()
+    receiver.connection.handleRestored()
+  })
+
+  it('should abort when a new path brings another certificate', async () => {
+    let swap = false
+
+    const replaceCertificate: Relay = (message) => (
+      swap && message.type === 'offer' ? { type: 'offer', sdp: sdpWith('CC:CC') } : message
+    )
+    const { sender, receiver } = await connectVerified(replaceCertificate)
+
+    swap = true
+    sender.connection.handleUnreachable()
+
+    await until(() => receiver.status === 'compromised')
+
+    sender.connection.handleRestored()
+  })
+
+  it('should give up when the network does not come back', async () => {
+    jest.useFakeTimers({ doNotFake: ['setImmediate', 'nextTick', 'queueMicrotask'] })
+
+    const side = new Side('receiver', identity(receiverFingerprint), receiverFingerprint, () => undefined)
+
+    side.connection['verified'] = true
+    side.connection.handleUnreachable()
+
+    await jest.advanceTimersByTimeAsync(30_000)
+
+    expect(side.status).toBe('unreachable')
+
+    jest.useRealTimers()
+  })
+
+  it('should report that a direct connection is not possible', async () => {
     const side = new Side('sender', identity(senderFingerprint), senderFingerprint, () => undefined)
 
     side.connection.handleUnreachable()
 
-    expect(side.status).toBe('unreachable')
+    await until(() => side.status === 'unreachable')
   })
 })

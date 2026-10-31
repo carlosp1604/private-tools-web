@@ -1,8 +1,12 @@
 import { parseFingerprint } from '~/crypto/transferVerification'
+import { Bytes } from '~/crypto/base64Url'
+import { FileChannel } from '~/services/transfer/FileExchange'
 import { PeerPort, TransferRole } from '~/services/transfer/TransferConnection'
 
 const ICE_SERVERS = [{ urls: 'stun:stun.cloudflare.com:3478' }]
 const CONTROL_CHANNEL = 'control'
+const BUFFER_HIGH_BYTES = 1024 * 1024
+const BUFFER_LOW_BYTES = 256 * 1024
 
 export interface BrowserIdentity {
   certificate: RTCCertificate
@@ -13,7 +17,9 @@ export interface BrowserPeerEvents {
   onCandidate(candidate: RTCIceCandidateInit): void
   onControlOpen(): void
   onControlMessage(message: string): void
+  onChunk(chunk: Bytes): void
   onUnreachable(): void
+  onRestored(): void
 }
 
 /**
@@ -38,7 +44,7 @@ export async function createBrowserIdentity(): Promise<BrowserIdentity> {
   return { certificate, fingerprint }
 }
 
-export class BrowserPeer implements PeerPort {
+export class BrowserPeer implements PeerPort, FileChannel {
   private readonly connection: RTCPeerConnection
   private controlChannel: RTCDataChannel | null = null
   private readonly pendingCandidates: Array<RTCIceCandidateInit> = []
@@ -53,8 +59,12 @@ export class BrowserPeer implements PeerPort {
     })
 
     this.connection.addEventListener('iceconnectionstatechange', () => {
-      if (this.connection.iceConnectionState === 'failed') {
+      const state = this.connection.iceConnectionState
+
+      if (state === 'failed') {
         events.onUnreachable()
+      } else if (state === 'connected' || state === 'completed') {
+        events.onRestored()
       }
     })
 
@@ -97,8 +107,34 @@ export class BrowserPeer implements PeerPort {
     }
   }
 
+  public async restart(): Promise<string> {
+    const offer = await this.connection.createOffer({ iceRestart: true })
+
+    await this.connection.setLocalDescription(offer)
+
+    return offer.sdp ?? ''
+  }
+
   public sendControl(message: string): void {
     this.controlChannel?.send(message)
+  }
+
+  public sendMessage(message: string): void {
+    this.sendControl(message)
+  }
+
+  public sendChunk(chunk: Bytes): void {
+    this.controlChannel?.send(chunk)
+  }
+
+  public waitForDrain(): Promise<void> {
+    const channel = this.controlChannel
+
+    if (!channel || channel.bufferedAmount < BUFFER_HIGH_BYTES) {
+      return Promise.resolve()
+    }
+
+    return new Promise((resolve) => channel.addEventListener('bufferedamountlow', () => resolve(), { once: true }))
   }
 
   public close(): void {
@@ -108,8 +144,17 @@ export class BrowserPeer implements PeerPort {
   private attachControlChannel(channel: RTCDataChannel): void {
     this.controlChannel = channel
 
+    channel.binaryType = 'arraybuffer'
+    channel.bufferedAmountLowThreshold = BUFFER_LOW_BYTES
+
     channel.addEventListener('open', () => this.events.onControlOpen())
-    channel.addEventListener('message', (event: MessageEvent<string>) => this.events.onControlMessage(event.data))
+    channel.addEventListener('message', (event: MessageEvent<string | ArrayBuffer>) => {
+      if (typeof event.data === 'string') {
+        this.events.onControlMessage(event.data)
+      } else {
+        this.events.onChunk(new Uint8Array(event.data))
+      }
+    })
   }
 
   private async addPendingCandidates(): Promise<void> {

@@ -3,6 +3,8 @@ import { createCommitment, deriveVerificationNames, parseFingerprint, Verificati
 
 export type TransferRole = 'sender' | 'receiver'
 
+const RECOVERY_TIMEOUT_MS = 30_000
+
 export type TransferStatus = 'waiting' | 'connecting' | 'verifying' | 'connected' | 'unreachable' | 'compromised'
 
 export type SignalMessage =
@@ -21,6 +23,7 @@ export interface PeerPort {
   acceptOffer(sdp: string): Promise<string>
   acceptAnswer(sdp: string): Promise<void>
   addCandidate(candidate: RTCIceCandidateInit): Promise<void>
+  restart(): Promise<string>
   sendControl(message: string): void
   close(): void
 }
@@ -28,6 +31,7 @@ export interface PeerPort {
 export interface TransferConnectionListener {
   onStatus(status: TransferStatus): void
   onVerified(names: VerificationNames): void
+  onMessage(message: string): void
 }
 
 /**
@@ -38,6 +42,8 @@ export class TransferConnection {
   private peerCommitment: string | null = null
   private peerFingerprint: string | null = null
   private negotiationStarted = false
+  private verified = false
+  private recoveryTimeout: ReturnType<typeof setTimeout> | null = null
   private pending: Promise<void> = Promise.resolve()
 
   constructor(
@@ -70,14 +76,38 @@ export class TransferConnection {
   }
 
   public handleControlMessage(message: string): void {
-    this.enqueue(() => this.verifyPeer(message))
+    this.enqueue(() => (this.verified ? this.listener.onMessage(message) : this.verifyPeer(message)))
   }
 
+  /**
+   * A network change breaks the path, not the session. Once verified, a new path is negotiated while the channel
+   * stays alive, and only if that takes too long is the connection given up
+   */
   public handleUnreachable(): void {
-    this.listener.onStatus('unreachable')
+    this.enqueue(async () => {
+      if (!this.verified) {
+        this.listener.onStatus('unreachable')
+
+        return
+      }
+
+      this.recoveryTimeout ??= setTimeout(() => this.listener.onStatus('unreachable'), RECOVERY_TIMEOUT_MS)
+
+      if (this.role === 'sender') {
+        this.signal({ type: 'offer', sdp: await this.peer.restart() })
+      }
+    })
+  }
+
+  public handleRestored(): void {
+    if (this.recoveryTimeout) {
+      clearTimeout(this.recoveryTimeout)
+      this.recoveryTimeout = null
+    }
   }
 
   public close(): void {
+    this.handleRestored()
     this.peer.close()
   }
 
@@ -121,11 +151,13 @@ export class TransferConnection {
   }
 
   private rememberPeerFingerprint(sdp: string): void {
-    this.peerFingerprint = parseFingerprint(sdp)
+    const fingerprint = parseFingerprint(sdp)
 
-    if (!this.peerFingerprint) {
-      throw new Error('The description has no fingerprint')
+    if (!fingerprint || (this.verified && fingerprint !== this.peerFingerprint)) {
+      throw new Error('The description does not have the expected fingerprint')
     }
+
+    this.peerFingerprint = fingerprint
   }
 
   private async verifyPeer(encodedNonce: string): Promise<void> {
@@ -144,6 +176,7 @@ export class TransferConnection {
       ? await deriveVerificationNames(nonce, peerNonce, fingerprint, this.peerFingerprint)
       : await deriveVerificationNames(peerNonce, nonce, this.peerFingerprint, fingerprint)
 
+    this.verified = true
     this.listener.onStatus('connected')
     this.listener.onVerified(names)
   }

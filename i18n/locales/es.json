@@ -78,5 +78,19 @@
   "transfer.end.expired": "El código ha caducado. Crea un envío nuevo.",
   "transfer.end.failed": "No se pudo iniciar el envío. Inténtalo de nuevo.",
   "transfer.end.unreachable": "No se pudo establecer una conexión directa entre ambas redes.",
-  "transfer.end.compromised": "No se pudo verificar la conexión. Se ha cerrado por seguridad."
+  "transfer.end.compromised": "No se pudo verificar la conexión. Se ha cerrado por seguridad.",
+  "transfer.selectFile": "Elegir fichero",
+  "transfer.confirm": "Enviar",
+  "transfer.incoming": "La otra persona quiere enviarte este fichero:",
+  "transfer.accept": "Aceptar y guardar",
+  "transfer.tooLarge": "El fichero es demasiado grande para este navegador.",
+  "transfer.progress": "Progreso del envío",
+  "transfer.remaining": "Quedan {time}",
+  "transfer.keepOpen": "Mantén esta página abierta y la pantalla encendida hasta que termine.",
+  "transfer.end.completed": "Envío completado.",
+  "transfer.exchange.offered": "Esperando a que la otra persona acepte…",
+  "transfer.exchange.transferring": "Transfiriendo…",
+  "transfer.exchange.verifying": "Comprobando el fichero…",
+  "transfer.exchange.completed": "Completado. El fichero llegó intacto.",
+  "transfer.exchange.corrupted": "El fichero no llegó intacto y se ha descartado. Crea un envío nuevo."
 }

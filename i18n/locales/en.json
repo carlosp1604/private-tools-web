@@ -78,5 +78,19 @@
   "transfer.end.expired": "The code expired. Create a new transfer.",
   "transfer.end.failed": "The transfer could not be started. Try again.",
   "transfer.end.unreachable": "A direct connection between both networks was not possible.",
-  "transfer.end.compromised": "The connection could not be verified. It was closed for safety."
+  "transfer.end.compromised": "The connection could not be verified. It was closed for safety.",
+  "transfer.selectFile": "Choose file",
+  "transfer.confirm": "Send",
+  "transfer.incoming": "The other person wants to send you this file:",
+  "transfer.accept": "Accept and save",
+  "transfer.tooLarge": "The file is too large for this browser.",
+  "transfer.progress": "Transfer progress",
+  "transfer.remaining": "{time} left",
+  "transfer.keepOpen": "Keep this page open and the screen on until it finishes.",
+  "transfer.end.completed": "Transfer completed.",
+  "transfer.exchange.offered": "Waiting for the other person to accept…",
+  "transfer.exchange.transferring": "Transferring…",
+  "transfer.exchange.verifying": "Checking the file…",
+  "transfer.exchange.completed": "Completed. The file arrived intact.",
+  "transfer.exchange.corrupted": "The file did not arrive intact and was discarded. Create a new transfer."
 }

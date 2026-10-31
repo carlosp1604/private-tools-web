@@ -78,5 +78,19 @@
   "transfer.end.expired": "Der Code ist abgelaufen. Erstelle eine neue Übertragung.",
   "transfer.end.failed": "Die Übertragung konnte nicht gestartet werden. Versuche es erneut.",
   "transfer.end.unreachable": "Eine direkte Verbindung zwischen beiden Netzwerken war nicht möglich.",
-  "transfer.end.compromised": "Die Verbindung konnte nicht überprüft werden. Sie wurde aus Sicherheitsgründen geschlossen."
+  "transfer.end.compromised": "Die Verbindung konnte nicht überprüft werden. Sie wurde aus Sicherheitsgründen geschlossen.",
+  "transfer.selectFile": "Datei auswählen",
+  "transfer.confirm": "Senden",
+  "transfer.incoming": "Die andere Person möchte dir diese Datei senden:",
+  "transfer.accept": "Annehmen und speichern",
+  "transfer.tooLarge": "Die Datei ist für diesen Browser zu groß.",
+  "transfer.progress": "Übertragungsfortschritt",
+  "transfer.remaining": "Noch {time}",
+  "transfer.keepOpen": "Lass diese Seite geöffnet und den Bildschirm an, bis der Vorgang abgeschlossen ist.",
+  "transfer.end.completed": "Übertragung abgeschlossen.",
+  "transfer.exchange.offered": "Warten, bis die andere Person annimmt…",
+  "transfer.exchange.transferring": "Wird übertragen…",
+  "transfer.exchange.verifying": "Datei wird geprüft…",
+  "transfer.exchange.completed": "Abgeschlossen. Die Datei ist unversehrt angekommen.",
+  "transfer.exchange.corrupted": "Die Datei kam nicht unversehrt an und wurde verworfen. Erstelle eine neue Übertragung."
 }
