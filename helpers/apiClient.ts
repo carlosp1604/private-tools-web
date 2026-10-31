@@ -5,7 +5,7 @@ export interface ApiResponse {
   body: unknown
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''
+const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 export async function postJson(path: string, payload: unknown): Promise<Result<ApiResponse, 'network'>> {
   try {
