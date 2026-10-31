@@ -63,3 +63,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /out
 next-env.d.ts
 *.tsbuildinfo
+AGENTS.md

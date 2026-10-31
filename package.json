@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "next dev --webpack -p 3001",
-    "build": "next build --webpack && yarn check:csp",
+    "build": "next build --webpack && node scripts/postbuild.mjs && yarn check:csp",
     "check:csp": "node scripts/check-csp.mjs",
     "preview": "wrangler dev --env dev",
     "type-check": "next typegen && tsc --noEmit",

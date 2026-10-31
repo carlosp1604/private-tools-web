@@ -3,7 +3,7 @@ import { useTranslation } from '~/context/TranslationContext'
 import { LanguageSelector } from '~/components/Layout/LanguageSelector'
 
 export function Landing() {
-  const { t } = useTranslation()
+  const { locale, t } = useTranslation()
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-3xl flex-col justify-center gap-10 px-4 py-12">
@@ -14,7 +14,7 @@ export function Landing() {
 
       <section className="grid gap-4 sm:grid-cols-2">
         <ToolCard title={ t('landing.chat.title') } description={ t('landing.chat.description') } />
-        <ToolCard title={ t('landing.secrets.title') } description={ t('landing.secrets.description') } />
+        <ToolCard title={ t('landing.secrets.title') } description={ t('landing.secrets.description') } href={ `/${locale}/secrets` } />
       </section>
 
       <LanguageSelector />
