@@ -1,0 +1,52 @@
+{
+  "name": "private-tools-web",
+  "version": "0.0.1",
+  "description": "Private tools front-end",
+  "repository": "git@github.com:carlosp1604/private-tools-web.git",
+  "author": "Carlos Ponton",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev --webpack -p 3001",
+    "build": "next build --webpack && yarn check:csp",
+    "check:csp": "node scripts/check-csp.mjs",
+    "preview": "wrangler dev --env dev",
+    "type-check": "next typegen && tsc --noEmit",
+    "lint": "eslint",
+    "test": "jest",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ]
+  },
+  "dependencies": {
+    "next": "^16.4.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint-react/eslint-plugin": "^5.28.8",
+    "@eslint/js": "^9",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/jest": "^30",
+    "@types/node": "^22",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "husky": "^9.1.7",
+    "jest": "^30",
+    "lint-staged": "^16",
+    "tailwindcss": "^4.3.3",
+    "ts-jest": "^29.4.15",
+    "typescript": "^5",
+    "typescript-eslint": "^8.72.1",
+    "wrangler": "^4.156.0"
+  }
+}

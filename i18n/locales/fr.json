@@ -1,0 +1,9 @@
+{
+  "landing.title": "Outils privés",
+  "landing.subtitle": "Chiffré dans votre navigateur. Sans compte et sans journaux.",
+  "landing.chat.title": "Discussion privée",
+  "landing.chat.description": "Échangez avec une autre personne. Les messages sont chiffrés de bout en bout et disparaissent à la fermeture.",
+  "landing.secrets.title": "Partager un secret",
+  "landing.secrets.description": "Envoyez un texte chiffré par lien, avec mot de passe, expiration et limite de lectures.",
+  "language.label": "Langue"
+}

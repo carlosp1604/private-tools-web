@@ -1,0 +1,9 @@
+{
+  "landing.title": "Strumenti privati",
+  "landing.subtitle": "Cifrato nel tuo browser. Nessun account e nessun registro.",
+  "landing.chat.title": "Chat privata",
+  "landing.chat.description": "Parla con un'altra persona. I messaggi sono cifrati end-to-end e scompaiono alla chiusura.",
+  "landing.secrets.title": "Condividi un segreto",
+  "landing.secrets.description": "Invia un testo cifrato tramite link, con password, scadenza e limite di letture.",
+  "language.label": "Lingua"
+}

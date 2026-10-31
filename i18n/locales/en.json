@@ -1,0 +1,9 @@
+{
+  "landing.title": "Private tools",
+  "landing.subtitle": "Encrypted in your browser. No accounts and no logs.",
+  "landing.chat.title": "Private chat",
+  "landing.chat.description": "Talk to one other person. Messages are end-to-end encrypted and vanish when you close the page.",
+  "landing.secrets.title": "Share a secret",
+  "landing.secrets.description": "Send encrypted text through a link, with a password, an expiry time and a read limit.",
+  "language.label": "Language"
+}

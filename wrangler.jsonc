@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "private-tools-web",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": false
+  },
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page"
+  },
+  "env": {
+    "dev": {
+      "name": "private-tools-web-dev",
+      "workers_dev": true
+    },
+    "production": {
+      "name": "private-tools-web-production"
+    }
+  }
+}
