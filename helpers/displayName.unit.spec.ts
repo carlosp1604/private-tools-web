@@ -1,8 +1,13 @@
-import { ANIMALS, generateDisplayName, PREFIXES } from '~/services/chat/generateDisplayName'
+import { ANIMALS, displayNameFromValues, generateDisplayName, PREFIXES } from '~/helpers/displayName'
 
 describe('generateDisplayName', () => {
   it('should combine a prefix, an animal and a two digit number', () => {
     expect(generateDisplayName()).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+[1-9]\d$/)
+  })
+
+  it('should give the same name to the same values', () => {
+    expect(displayNameFromValues(5, 7, 9)).toBe(displayNameFromValues(5, 7, 9))
+    expect(displayNameFromValues(5, 7, 9)).not.toBe(displayNameFromValues(6, 7, 9))
   })
 
   it('should offer millions of combinations', () => {

@@ -43,10 +43,14 @@ export const ANIMALS = [
 const MIN_SUFFIX = 10
 const SUFFIX_VALUES = 90
 
-function randomBelow(limit: number): number {
-  const [value = 0] = crypto.getRandomValues(new Uint32Array(1))
+function randomValues(): [number, number, number] {
+  const [prefix = 0, animal = 0, suffix = 0] = crypto.getRandomValues(new Uint32Array(3))
 
-  return value % limit
+  return [prefix, animal, suffix]
+}
+
+export function displayNameFromValues(prefix: number, animal: number, suffix: number): string {
+  return `${PREFIXES[prefix % PREFIXES.length]}${ANIMALS[animal % ANIMALS.length]}${MIN_SUFFIX + (suffix % SUFFIX_VALUES)}`
 }
 
 /**
@@ -54,8 +58,5 @@ function randomBelow(limit: number): number {
  * would end up with the same name. The other side only learns it through the encrypted channel
  */
 export function generateDisplayName(): string {
-  const prefix = PREFIXES[randomBelow(PREFIXES.length)]
-  const animal = ANIMALS[randomBelow(ANIMALS.length)]
-
-  return `${prefix}${animal}${MIN_SUFFIX + randomBelow(SUFFIX_VALUES)}`
+  return displayNameFromValues(...randomValues())
 }

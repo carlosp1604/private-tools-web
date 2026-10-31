@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { deriveRoomKeys } from '~/crypto/chatCrypto'
 import { openRoomConnection } from '~/services/chat/openRoomConnection'
-import { generateDisplayName } from '~/services/chat/generateDisplayName'
+import { generateDisplayName } from '~/helpers/displayName'
 import { ChatSession, ChatStatus } from '~/services/chat/ChatSession'
 
 const ENDED_STATUSES = ['room_full', 'compromised', 'disconnected'] as const
