@@ -14,6 +14,8 @@
     "build": "next build --webpack && node scripts/postbuild.mjs && yarn check:csp",
     "check:csp": "node scripts/check-csp.mjs",
     "preview": "wrangler dev --env dev",
+    "deploy:dev": "yarn build && wrangler deploy --env dev",
+    "deploy:production": "yarn build && wrangler deploy --env production",
     "type-check": "next typegen && tsc --noEmit",
     "lint": "eslint",
     "test": "jest",

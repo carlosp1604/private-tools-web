@@ -14,10 +14,11 @@
   "env": {
     "dev": {
       "name": "private-tools-web-dev",
-      "workers_dev": true
+      "routes": [{ "pattern": "tools-dev.cponton.com", "custom_domain": true }]
     },
     "production": {
-      "name": "private-tools-web-production"
+      "name": "private-tools-web-production",
+      "routes": [{ "pattern": "tools.cponton.com", "custom_domain": true }]
     }
   }
 }
