@@ -13,7 +13,7 @@ export function Landing() {
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <ToolCard title={ t('landing.chat.title') } description={ t('landing.chat.description') } />
+        <ToolCard title={ t('landing.chat.title') } description={ t('landing.chat.description') } href={ `/${locale}/chat` } />
         <ToolCard title={ t('landing.secrets.title') } description={ t('landing.secrets.description') } href={ `/${locale}/secrets` } />
       </section>
 

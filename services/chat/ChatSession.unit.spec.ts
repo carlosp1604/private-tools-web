@@ -265,6 +265,18 @@ describe('ChatSession', () => {
     expect(first.status).toBe('compromised')
   })
 
+  it('should not report a lost connection after leaving on purpose', async () => {
+    const { first } = await connectReadyPair()
+    const statusesBeforeLeaving = first.statuses.length
+
+    first.session.leave()
+    first.session.handleClose(1000)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    expect(first.closed).toBe(true)
+    expect(first.statuses).toHaveLength(statusesBeforeLeaving)
+  })
+
   it('should ignore a notice it cannot read', async () => {
     const participant = new Participant(authKey, () => undefined)
 

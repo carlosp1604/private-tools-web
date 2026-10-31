@@ -42,6 +42,7 @@ export class ChatSession {
   private sendSequence = 0
   private receiveSequence = 0
   private pending: Promise<void> = Promise.resolve()
+  private left = false
 
   constructor(
     private readonly transport: ChatTransport,
@@ -104,6 +105,7 @@ export class ChatSession {
   }
 
   public leave(): void {
+    this.left = true
     this.transport.close()
   }
 
@@ -198,6 +200,10 @@ export class ChatSession {
 
   private setStatus(status: ChatStatus): void {
     this.status = status
-    this.listener.onStatus(status)
+
+    // Whoever leaves has already moved on, so the close of the socket must not reach them as a lost connection
+    if (!this.left) {
+      this.listener.onStatus(status)
+    }
   }
 }
