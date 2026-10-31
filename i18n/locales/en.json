@@ -49,9 +49,14 @@
   "chat.status.connecting": "Connecting…",
   "chat.status.waiting": "Waiting for the other person…",
   "chat.status.securing": "Setting up encryption…",
-  "chat.status.ready": "Connected with end-to-end encryption.",
   "chat.status.roomFull": "This room already has two participants.",
   "chat.status.compromised": "The other person could not be verified. The conversation was closed for safety.",
   "chat.status.disconnected": "Connection lost.",
-  "chat.invitation": "Share this code and the password through different channels. The other person needs both."
+  "chat.invitation": "Share this code and the password through different channels. The other person needs both.",
+  "chat.you": "You",
+  "chat.youAre": "You are {name}",
+  "chat.connectedWith": "Connected with {name}",
+  "chat.event.joined": "{name} joined",
+  "chat.event.left": "{name} left the chat",
+  "chat.encrypted": "End-to-end encrypted"
 }

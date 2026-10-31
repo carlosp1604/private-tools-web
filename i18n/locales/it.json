@@ -49,9 +49,14 @@
   "chat.status.connecting": "Connessione…",
   "chat.status.waiting": "In attesa dell'altra persona…",
   "chat.status.securing": "Configurazione della cifratura…",
-  "chat.status.ready": "Connessi con cifratura end-to-end.",
   "chat.status.roomFull": "Questa stanza ha già due partecipanti.",
   "chat.status.compromised": "Non è stato possibile verificare l'altra persona. La conversazione è stata chiusa per sicurezza.",
   "chat.status.disconnected": "Connessione persa.",
-  "chat.invitation": "Condividi questo codice e la password su canali diversi. L'altra persona ha bisogno di entrambi."
+  "chat.invitation": "Condividi questo codice e la password su canali diversi. L'altra persona ha bisogno di entrambi.",
+  "chat.you": "Tu",
+  "chat.youAre": "Sei {name}",
+  "chat.connectedWith": "Connesso con {name}",
+  "chat.event.joined": "{name} è entrato",
+  "chat.event.left": "{name} ha lasciato la chat",
+  "chat.encrypted": "Cifrato end-to-end"
 }

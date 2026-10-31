@@ -13,6 +13,9 @@ import {
 const PUBLIC_KEY_FRAME = 1
 const CONFIRMATION_FRAME = 2
 const MESSAGE_FRAME = 3
+const DISPLAY_NAME_FRAME = 4
+
+const MAX_DISPLAY_NAME_LENGTH = 64
 
 export const ROOM_FULL_CLOSE_CODE = 4001
 
@@ -27,6 +30,8 @@ export interface ChatSessionListener {
   onStatus(status: ChatStatus): void
   onMessage(text: string): void
   onUndelivered(): void
+  onPeerJoined(displayName: string): void
+  onPeerLeft(displayName: string): void
 }
 
 /**
@@ -39,6 +44,7 @@ export class ChatSession {
   private channel: ChatChannel | null = null
   private peerConfirmation: Bytes | null = null
   private peerConfirmed = false
+  private peerDisplayName: string | null = null
   private sendSequence = 0
   private receiveSequence = 0
   private pending: Promise<void> = Promise.resolve()
@@ -47,6 +53,7 @@ export class ChatSession {
   constructor(
     private readonly transport: ChatTransport,
     private readonly authKey: Bytes,
+    private readonly displayName: string,
     private readonly listener: ChatSessionListener
   ) {}
 
@@ -63,8 +70,14 @@ export class ChatSession {
 
     if (type === 'peer_left') {
       this.enqueue(() => {
+        const peerDisplayName = this.peerDisplayName
+
         this.resetHandshake()
         this.setStatus('waiting')
+
+        if (peerDisplayName && !this.left) {
+          this.listener.onPeerLeft(peerDisplayName)
+        }
       })
     }
 
@@ -89,14 +102,7 @@ export class ChatSession {
 
   public send(text: string): Promise<void> {
     const sent = this.pending.then(async () => {
-      if (!this.channel || this.status !== 'ready') {
-        throw new Error('The channel is not ready')
-      }
-
-      const ciphertext = await encryptMessage(text, this.channel.sendKey, this.sendSequence)
-
-      this.sendSequence += 1
-      this.sendFrame(MESSAGE_FRAME, ciphertext)
+      await this.sendEncrypted(MESSAGE_FRAME, text)
     })
 
     this.pending = sent.catch(() => undefined)
@@ -137,9 +143,11 @@ export class ChatSession {
       await this.receivePublicKey(payload)
     } else if (type === CONFIRMATION_FRAME) {
       this.peerConfirmation = payload
-      this.verifyPeer()
+      await this.verifyPeer()
     } else if (type === MESSAGE_FRAME) {
-      await this.receiveMessage(payload)
+      this.deliverMessage(await this.receiveEncrypted(payload))
+    } else if (type === DISPLAY_NAME_FRAME) {
+      this.deliverDisplayName(await this.receiveEncrypted(payload))
     } else {
       throw new Error('Unknown frame')
     }
@@ -152,10 +160,10 @@ export class ChatSession {
 
     this.channel = await establishChannel(this.keys, peerPublicKey, this.authKey)
     this.sendFrame(CONFIRMATION_FRAME, this.channel.confirmation)
-    this.verifyPeer()
+    await this.verifyPeer()
   }
 
-  private verifyPeer(): void {
+  private async verifyPeer(): Promise<void> {
     if (!this.channel || !this.peerConfirmation) {
       return
     }
@@ -166,17 +174,49 @@ export class ChatSession {
 
     this.peerConfirmed = true
     this.setStatus('ready')
+
+    await this.sendEncrypted(DISPLAY_NAME_FRAME, this.displayName)
   }
 
-  private async receiveMessage(ciphertext: Bytes): Promise<void> {
+  private async sendEncrypted(type: number, text: string): Promise<void> {
+    if (!this.channel || this.status !== 'ready') {
+      throw new Error('The channel is not ready')
+    }
+
+    const ciphertext = await encryptMessage(text, this.channel.sendKey, this.sendSequence)
+
+    this.sendSequence += 1
+    this.sendFrame(type, ciphertext)
+  }
+
+  private async receiveEncrypted(ciphertext: Bytes): Promise<string> {
     if (!this.channel || !this.peerConfirmed) {
-      throw new Error('Unexpected message')
+      throw new Error('Unexpected encrypted frame')
     }
 
     const text = await decryptMessage(ciphertext, this.channel.receiveKey, this.receiveSequence)
 
     this.receiveSequence += 1
-    this.listener.onMessage(text)
+
+    return text
+  }
+
+  private deliverMessage(text: string): void {
+    if (!this.left) {
+      this.listener.onMessage(text)
+    }
+  }
+
+  private deliverDisplayName(displayName: string): void {
+    if (displayName.length === 0 || displayName.length > MAX_DISPLAY_NAME_LENGTH) {
+      throw new Error('Invalid display name')
+    }
+
+    this.peerDisplayName = displayName
+
+    if (!this.left) {
+      this.listener.onPeerJoined(displayName)
+    }
   }
 
   private sendFrame(type: number, payload: Bytes): void {
@@ -188,6 +228,7 @@ export class ChatSession {
     this.channel = null
     this.peerConfirmation = null
     this.peerConfirmed = false
+    this.peerDisplayName = null
     this.sendSequence = 0
     this.receiveSequence = 0
   }

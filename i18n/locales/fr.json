@@ -49,9 +49,14 @@
   "chat.status.connecting": "Connexion…",
   "chat.status.waiting": "En attente de l'autre personne…",
   "chat.status.securing": "Mise en place du chiffrement…",
-  "chat.status.ready": "Connectés avec chiffrement de bout en bout.",
   "chat.status.roomFull": "Ce salon compte déjà deux participants.",
   "chat.status.compromised": "L'autre personne n'a pas pu être vérifiée. La conversation a été fermée par sécurité.",
   "chat.status.disconnected": "Connexion perdue.",
-  "chat.invitation": "Partagez ce code et le mot de passe par des canaux différents. L'autre personne a besoin des deux."
+  "chat.invitation": "Partagez ce code et le mot de passe par des canaux différents. L'autre personne a besoin des deux.",
+  "chat.you": "Vous",
+  "chat.youAre": "Vous êtes {name}",
+  "chat.connectedWith": "Connecté à {name}",
+  "chat.event.joined": "{name} a rejoint",
+  "chat.event.left": "{name} a quitté la discussion",
+  "chat.encrypted": "Chiffré de bout en bout"
 }

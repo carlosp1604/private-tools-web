@@ -37,7 +37,7 @@ export function ChatComposer({ disabled, onSend }: Props) {
 
   return (
     <form onSubmit={ handleSubmit } className="flex flex-col gap-1.5">
-      <div className="flex items-end gap-2">
+      <div className="flex items-stretch gap-2">
         <textarea
           rows={ 2 }
           value={ text }

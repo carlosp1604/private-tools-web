@@ -14,11 +14,13 @@ type FrameFilter = (frame: Bytes) => Bytes | Promise<Bytes>
 class Participant {
   public readonly statuses: Array<ChatStatus> = []
   public readonly messages: Array<string> = []
+  public readonly joined: Array<string> = []
+  public readonly left: Array<string> = []
   public undelivered = 0
   public closed = false
   public session: ChatSession
 
-  constructor(authKey: Bytes, deliver: (frame: Bytes) => void) {
+  constructor(authKey: Bytes, deliver: (frame: Bytes) => void, displayName = 'TurboMantis') {
     this.session = new ChatSession(
       {
         send: deliver,
@@ -27,12 +29,15 @@ class Participant {
         },
       },
       authKey,
+      displayName,
       {
         onStatus: (status) => this.statuses.push(status),
         onMessage: (text) => this.messages.push(text),
         onUndelivered: () => {
           this.undelivered += 1
         },
+        onPeerJoined: (name) => this.joined.push(name),
+        onPeerLeft: (name) => this.left.push(name),
       }
     )
   }
@@ -63,8 +68,8 @@ describe('ChatSession', () => {
       void Promise.resolve(filter(frame)).then((forwarded) => getTarget().session.handleFrame(forwarded))
     }
 
-    const first: Participant = new Participant(authKey, relay(() => second))
-    const second: Participant = new Participant(secondAuthKey, relay(() => first))
+    const first: Participant = new Participant(authKey, relay(() => second), 'HyperOtter')
+    const second: Participant = new Participant(secondAuthKey, relay(() => first), 'TurboMantis')
 
     first.session.handleOpen()
     second.session.handleOpen()
@@ -77,7 +82,7 @@ describe('ChatSession', () => {
   const connectReadyPair = async () => {
     const pair = connectPair()
 
-    await until(() => pair.first.status === 'ready' && pair.second.status === 'ready')
+    await until(() => pair.first.joined.length === 1 && pair.second.joined.length === 1)
 
     return pair
   }
@@ -110,6 +115,46 @@ describe('ChatSession', () => {
     expect(first.messages).toStrictEqual(['tres'])
   })
 
+  it('should tell each side the name of the other one', async () => {
+    const { first, second } = await connectReadyPair()
+
+    expect(first.joined).toStrictEqual(['TurboMantis'])
+    expect(second.joined).toStrictEqual(['HyperOtter'])
+  })
+
+  it('should never put the display name in a frame without encrypting it', async () => {
+    const frames: Array<Bytes> = []
+    const { first, second } = connectPair((frame) => {
+      frames.push(frame)
+
+      return frame
+    })
+
+    await until(() => first.joined.length === 1 && second.joined.length === 1)
+
+    expect(new TextDecoder('latin1').decode(concatBytes(...frames))).not.toContain('Mantis')
+  })
+
+  it('should report who left', async () => {
+    const { first } = await connectReadyPair()
+
+    first.session.handleNotice(PEER_LEFT)
+
+    await until(() => first.left.length === 1)
+
+    expect(first.left).toStrictEqual(['TurboMantis'])
+  })
+
+  it('should not report a departure when nobody had finished joining', async () => {
+    const participant = new Participant(authKey, () => undefined)
+
+    participant.session.handleOpen()
+    participant.session.handleNotice(PEER_LEFT)
+    await until(() => participant.statuses.length === 2)
+
+    expect(participant.left).toStrictEqual([])
+  })
+
   it('should refuse to send before the channel is ready', async () => {
     const participant = new Participant(authKey, () => undefined)
 
@@ -126,7 +171,7 @@ describe('ChatSession', () => {
       return frame
     })
 
-    await until(() => first.status === 'ready' && second.status === 'ready')
+    await until(() => first.joined.length === 1 && second.joined.length === 1)
     await first.session.send('texto muy secreto')
     await until(() => second.messages.length === 1)
 
@@ -172,7 +217,7 @@ describe('ChatSession', () => {
       return frame
     })
 
-    await until(() => first.status === 'ready' && second.status === 'ready')
+    await until(() => first.joined.length === 1 && second.joined.length === 1)
 
     tamper = true
     await first.session.send('hola')
@@ -192,7 +237,7 @@ describe('ChatSession', () => {
       return frame
     })
 
-    await until(() => first.status === 'ready' && second.status === 'ready')
+    await until(() => first.joined.length === 1 && second.joined.length === 1)
     await first.session.send('hola')
     await until(() => second.messages.length === 1)
 
@@ -222,7 +267,7 @@ describe('ChatSession', () => {
 
     first.session.handleNotice(PEER_JOINED)
     second.session.handleNotice(PEER_JOINED)
-    await until(() => first.status === 'ready' && second.status === 'ready')
+    await until(() => first.joined.length === 2 && second.joined.length === 2)
 
     await first.session.send('otra vez')
     await until(() => second.messages.length === 1)

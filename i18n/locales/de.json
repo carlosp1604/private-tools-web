@@ -49,9 +49,14 @@
   "chat.status.connecting": "Verbinden…",
   "chat.status.waiting": "Warten auf die andere Person…",
   "chat.status.securing": "Verschlüsselung wird eingerichtet…",
-  "chat.status.ready": "Verbunden mit Ende-zu-Ende-Verschlüsselung.",
   "chat.status.roomFull": "Dieser Raum hat bereits zwei Teilnehmende.",
   "chat.status.compromised": "Die andere Person konnte nicht überprüft werden. Die Unterhaltung wurde aus Sicherheitsgründen beendet.",
   "chat.status.disconnected": "Verbindung verloren.",
-  "chat.invitation": "Teile diesen Code und das Passwort über verschiedene Kanäle. Die andere Person braucht beides."
+  "chat.invitation": "Teile diesen Code und das Passwort über verschiedene Kanäle. Die andere Person braucht beides.",
+  "chat.you": "Du",
+  "chat.youAre": "Du bist {name}",
+  "chat.connectedWith": "Verbunden mit {name}",
+  "chat.event.joined": "{name} ist beigetreten",
+  "chat.event.left": "{name} hat den Chat verlassen",
+  "chat.encrypted": "Ende-zu-Ende-verschlüsselt"
 }
